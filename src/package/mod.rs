@@ -331,16 +331,12 @@ pub struct PackageDescription {
 
 impl ConfigFile {
     pub fn new_for_init_task(init_args: &InitArgs) -> io::Result<ConfigFile> {
-        let src_path = Path::new(DEFAULT_EXECUTABLE_FOLDER);
-        let main_reactors = if src_path.exists() {
-            analyzer::find_main_reactors(src_path)?
-        } else {
+        let main_reactors = 
             vec![analyzer::MainReactorSpec {
-                name: "Main".into(),
-                path: src_path.join("Main.lf"),
+                name: "main".into(),
+                path: "main.cc".into(),
                 target: init_args.get_target_language(),
-            }]
-        };
+            }];
         log::info!("main_reactors: {:?}", main_reactors);
         let app_specs: Vec<AppFile> = main_reactors
             .into_iter()
@@ -394,18 +390,19 @@ impl ConfigFile {
 
     // Sets up a standard LF project for "native" development and deployment
     pub fn setup_native(&self, target_language: TargetLanguage) -> BuildResult {
-        log::info!("Creating src directory");
-        std::fs::create_dir_all("./src")?;
         let hello_world_code: &'static str = match target_language {
-            TargetLanguage::Cpp => include_str!("../../defaults/HelloCpp.lf"),
-            TargetLanguage::C => include_str!("../../defaults/HelloC.lf"),
-            TargetLanguage::Python => include_str!("../../defaults/HelloPy.lf"),
-            TargetLanguage::TypeScript => include_str!("../../defaults/HelloTS.lf"),
+            TargetLanguage::Cpp => include_str!("../../defaults/main.cc"),
             _ => panic!("Target langauge not supported yet"), //FIXME: Add support for Rust.
         };
 
-        log::info!("Writing hello world file");
-        write(Path::new("./src/Main.lf"), hello_world_code)?;
+        write(Path::new("main.cc"), hello_world_code)?;
+
+        let cmake_file: &'static str = match target_language {
+            TargetLanguage::Cpp => include_str!("../../defaults/CMakeLists.txt"),
+            _ => panic!("Target langauge not supported yet"), //FIXME: Add support for Rust.
+        };
+
+        write(Path::new("CMakeLists.txt"), cmake_file)?;
         Ok(())
     }
 

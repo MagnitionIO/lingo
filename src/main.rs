@@ -203,6 +203,11 @@ fn execute_command<'a>(
 
 fn do_init(init_config: InitArgs, git_clone_capability: &GitCloneAndCheckoutCap) -> BuildResult {
     log::info!("Doing Init");
+    if Path::new("Lingo.toml").exists() {
+        log::info!("Already initialized, no need to do anything else.");
+        return Ok(()); // Return early if Lingo.toml exists
+    }
+
     let initial_config = ConfigFile::new_for_init_task(&init_config)?;
     log::info!("Creating Files!");
     initial_config.write(Path::new("./Lingo.toml"))?;
