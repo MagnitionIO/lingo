@@ -62,7 +62,7 @@ pub struct AppVec {
 }
 
 /// The Lingo.toml format is defined by this struct
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize, Debug)]
 pub struct ConfigFile {
     /// top level package description
     pub package: PackageDescription,
@@ -80,7 +80,7 @@ pub struct ConfigFile {
 }
 
 /// This struct is used after filling in all the defaults
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Config {
     /// top level package description
     pub package: PackageDescription,
@@ -96,7 +96,7 @@ pub struct Config {
 }
 
 /// The Format inside the Lingo.toml under [lib]
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize, Debug)]
 pub struct LibraryFile {
     /// if not specified will default to value specified in the package description
     pub name: Option<String>,
@@ -114,7 +114,7 @@ pub struct LibraryFile {
     pub properties: LibraryTargetPropertiesFile,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Library {
     /// if not specified will default to value specified in the package description
     pub name: String,
@@ -136,7 +136,7 @@ pub struct Library {
 }
 
 /// Schema of the configuration parsed from the Lingo.toml
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize, Debug)]
 pub struct AppFile {
     /// if not specified will default to value specified in the package description
     pub name: Option<String>,
@@ -154,7 +154,7 @@ pub struct AppFile {
     pub properties: AppTargetPropertiesFile,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct App {
     /// Absolute path to the directory where the Lingo.toml file is located.
     pub root_path: PathBuf,
@@ -315,7 +315,7 @@ where
     deserializer.deserialize_str(VersioningVisitor)
 }
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct PackageDescription {
     pub name: String,
     #[serde(
@@ -341,9 +341,10 @@ impl ConfigFile {
                 target: init_args.get_target_language(),
             }]
         };
-        let app_specs = main_reactors
+        log::info!("main_reactors: {:?}", main_reactors);
+        let app_specs: Vec<AppFile> = main_reactors
             .into_iter()
-            .map(|spec| AppFile {
+            .map(|spec: analyzer::MainReactorSpec| AppFile {
                 name: Some(spec.name),
                 main: Some(spec.path),
                 target: spec.target,
@@ -393,6 +394,7 @@ impl ConfigFile {
 
     // Sets up a standard LF project for "native" development and deployment
     pub fn setup_native(&self, target_language: TargetLanguage) -> BuildResult {
+        log::info!("Creating src directory");
         std::fs::create_dir_all("./src")?;
         let hello_world_code: &'static str = match target_language {
             TargetLanguage::Cpp => include_str!("../../defaults/HelloCpp.lf"),
@@ -402,6 +404,7 @@ impl ConfigFile {
             _ => panic!("Target langauge not supported yet"), //FIXME: Add support for Rust.
         };
 
+        log::info!("Writing hello world file");
         write(Path::new("./src/Main.lf"), hello_world_code)?;
         Ok(())
     }
@@ -484,6 +487,7 @@ impl ConfigFile {
                 ),
             }
         } else {
+            log::info!("Folders already exist");
             Err(Box::new(LingoError::InvalidProjectLocation(
                 env::current_dir().expect("cannot fetch current working directory"),
             )))

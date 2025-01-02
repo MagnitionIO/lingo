@@ -29,6 +29,8 @@ pub fn execute_command<'a>(
     let mut result = BatchBuildResults::new();
     let dependencies = Vec::from_iter(config.dependencies.clone());
 
+    log::info!("Building command running config:{:?}", config);
+
     match command {
         CommandSpec::Build(_build) => {
             let manager = match DependencyManager::from_dependencies(
@@ -65,6 +67,8 @@ pub fn execute_command<'a>(
             .or_default()
             .push(app);
     }
+
+    log::info!("build-system to apps:{:?}", by_build_system);
 
     for (build_system, apps) in by_build_system {
         let mut sub_res = BatchBuildResults::for_apps(&apps);
@@ -103,7 +107,7 @@ pub fn execute_command<'a>(
     result
 }
 
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum BuildProfile {
     /// Compile with optimizations.
     Release,
@@ -111,6 +115,7 @@ pub enum BuildProfile {
     Debug,
 }
 
+#[derive(Debug)]
 pub struct BuildCommandOptions {
     /// Build profile, mostly relevant for target compilation.
     pub profile: BuildProfile,

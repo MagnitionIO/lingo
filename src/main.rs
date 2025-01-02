@@ -14,6 +14,7 @@ use liblingo::package::tree::GitLock;
 use liblingo::package::{Config, ConfigFile};
 use liblingo::util::errors::{BuildResult, LingoError};
 use liblingo::{GitCloneAndCheckoutCap, GitCloneError, GitUrl, WhichCapability, WhichError};
+use log::LevelFilter;
 
 fn do_which(cmd: &str) -> Result<PathBuf, WhichError> {
     which::which(cmd).map_err(|err| match err {
@@ -92,26 +93,32 @@ fn do_read_to_string(p: &Path) -> io::Result<String> {
 }
 
 fn main() {
-    print_logger::new().init().unwrap();
+    print_logger::new().level_filter(LevelFilter::Trace).init().unwrap();
     // parses command line arguments
     let args = CommandLineArgs::parse();
+    log::info!("arguments: {:?}", args);
 
     // Finds Lingo.toml recursively inside the parent directories.
     // If it exists the returned path is absolute.
     let lingo_path = liblingo::util::find_toml(&env::current_dir().unwrap());
+    log::info!("lingo toml file: {:?}", lingo_path);
 
     // tries to read Lingo.toml
-    let mut wrapped_config = lingo_path.as_ref().and_then(|path| {
+    let mut wrapped_config: Option<Config> = lingo_path.as_ref().and_then(|path: &PathBuf| {
         ConfigFile::from(path, Box::new(do_read_to_string))
             .map_err(|err| log::error!("Error while reading Lingo.toml: {}", err))
             .ok()
             .map(|cf| cf.to_config(path.parent().unwrap()))
     });
 
+    log::info!("Toml config file:{:?}", wrapped_config);
+
     let result: BuildResult = validate(&mut wrapped_config, &args.command);
     if result.is_err() {
         print_res(result)
     }
+
+    log::info!("After Validation -- Toml config file:{:?}", wrapped_config);
 
     let result = execute_command(
         &mut wrapped_config,
@@ -128,7 +135,9 @@ fn main() {
 
 fn print_res(result: BuildResult) {
     match result {
-        Ok(_) => {}
+        Ok(_) => {
+            log::info!("Single Processing: Success!");
+        }
         Err(errs) => {
             log::error!("{}", errs);
         }
@@ -166,6 +175,7 @@ fn execute_command<'a>(
 ) -> CommandResult<'a> {
     match (config, command) {
         (_, ConsoleCommand::Init(init_config)) => {
+            log::info!("Executing Init Command");
             CommandResult::Single(do_init(init_config, &git_clone_capability))
         }
         (None, _) => CommandResult::Single(Err(Box::new(io::Error::new(
@@ -192,8 +202,11 @@ fn execute_command<'a>(
 }
 
 fn do_init(init_config: InitArgs, git_clone_capability: &GitCloneAndCheckoutCap) -> BuildResult {
+    log::info!("Doing Init");
     let initial_config = ConfigFile::new_for_init_task(&init_config)?;
+    log::info!("Creating Files!");
     initial_config.write(Path::new("./Lingo.toml"))?;
+    log::info!("Written Toml File!");
     initial_config.setup_example(
         init_config.platform,
         init_config.language.unwrap_or(TargetLanguage::Cpp),

@@ -45,7 +45,7 @@ impl MergeTargetProperty for AutoCmakeLoad {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LibraryTargetPropertiesFile {
     /// cmake include only available for C and CPP
     #[serde(rename = "cmake-include", default)]
@@ -90,7 +90,7 @@ impl LibraryTargetPropertiesFile {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Default)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct AppTargetPropertiesFile {
     /// cmake include only available for C and CPP
     #[serde(rename = "cmake-include", default)]
@@ -101,7 +101,7 @@ pub struct AppTargetPropertiesFile {
     pub fast: bool,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct AppTargetProperties {
     /// cmake include only available for C and CPP
     cmake_include: AutoCmakeLoad,

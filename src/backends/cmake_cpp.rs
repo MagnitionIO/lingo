@@ -71,12 +71,14 @@ fn gen_cmake_files(app: &App, options: &BuildCommandOptions) -> BuildResult {
 }
 
 fn do_cmake_build(results: &mut BatchBuildResults, options: &BuildCommandOptions) {
+    log::info!("CPP cmake build");
     // configure keep going parameter
     results.keep_going(options.keep_going);
 
     // start code-generation
     super::lfc::LFC::do_parallel_lfc_codegen(options, results, false);
 
+    log::info!("LFC is done, moving on options:{:?}", options);
     // stop process if the user request code-generation only
     if !options.compile_target_code {
         return;
