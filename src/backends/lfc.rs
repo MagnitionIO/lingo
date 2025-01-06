@@ -32,8 +32,8 @@ impl LFC {
     ) -> BuildResult {
         fs::create_dir_all(&app.output_root)?;
 
-        log::info!("app:{:?}", app);
-        log::info!("options:{:?}", options);
+        // log::info!("app:{:?}", app);
+        // log::info!("options:{:?}", options);
 
         let mut lfc_command = Command::new(&options.lfc_exec_path);
         lfc_command.arg(format!(
@@ -41,7 +41,7 @@ impl LFC {
             LfcJsonArgs::new(app, compile_target_code)
         ));
 
-        log::info!("lfc_command:{:?}", lfc_command);
+        // log::info!("lfc_command:{:?}", lfc_command);
         crate::util::execute_command_to_build_result(lfc_command)
     }
 }

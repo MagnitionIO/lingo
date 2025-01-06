@@ -73,14 +73,12 @@ pub struct LibraryTargetProperties {
 }
 
 impl LibraryTargetPropertiesFile {
-    pub fn from(self, base_path: &Path) -> LibraryTargetProperties {
+    pub fn from(self, name: &String) -> LibraryTargetProperties {
         LibraryTargetProperties {
             cmake_include: AutoCmakeLoad(
                 self.cmake_include
                     .map(|cmake_file| {
-                        let absolute_path = base_path.join(cmake_file);
-                        std::fs::read_to_string(absolute_path)
-                            .expect("invalid file {absolute_path}")
+                        format!("include(lfc_include/{}/{})", name, cmake_file.to_string_lossy())
                     })
                     .unwrap_or_default(),
             ),

@@ -96,12 +96,12 @@ fn main() {
     print_logger::new().level_filter(LevelFilter::Trace).init().unwrap();
     // parses command line arguments
     let args = CommandLineArgs::parse();
-    log::info!("arguments: {:?}", args);
+    // log::info!("arguments: {:?}", args);
 
     // Finds Lingo.toml recursively inside the parent directories.
     // If it exists the returned path is absolute.
     let lingo_path = liblingo::util::find_toml(&env::current_dir().unwrap());
-    log::info!("lingo toml file: {:?}", lingo_path);
+    // log::info!("lingo toml file: {:?}", lingo_path);
 
     // tries to read Lingo.toml
     let mut wrapped_config: Option<Config> = lingo_path.as_ref().and_then(|path: &PathBuf| {
@@ -111,14 +111,14 @@ fn main() {
             .map(|cf| cf.to_config(path.parent().unwrap()))
     });
 
-    log::info!("Toml config file:{:?}", wrapped_config);
+    // log::info!("Toml config file:{:?}", wrapped_config);
 
     let result: BuildResult = validate(&mut wrapped_config, &args.command);
     if result.is_err() {
         print_res(result)
     }
 
-    log::info!("After Validation -- Toml config file:{:?}", wrapped_config);
+    // log::info!("After Validation -- Toml config file:{:?}", wrapped_config);
 
     let result = execute_command(
         &mut wrapped_config,
@@ -175,7 +175,7 @@ fn execute_command<'a>(
 ) -> CommandResult<'a> {
     match (config, command) {
         (_, ConsoleCommand::Init(init_config)) => {
-            log::info!("Executing Init Command");
+            // log::info!("Executing Init Command");
             CommandResult::Single(do_init(init_config, &git_clone_capability))
         }
         (None, _) => CommandResult::Single(Err(Box::new(io::Error::new(
@@ -188,7 +188,9 @@ fn execute_command<'a>(
         (Some(config), ConsoleCommand::Run(build_command_args)) => {
             let mut res = build(&build_command_args, config);
             res.map(|app| {
-                let mut command = Command::new(app.executable_path());
+                // let mut command = Command::new(app.executable_path());
+                let mut command = Command::new(app.output_root.join("build").join(app.name.clone()));
+                // log::info!("running command:{:?}", command);
                 liblingo::util::run_and_capture(&mut command)?;
                 Ok(())
             });
@@ -202,16 +204,16 @@ fn execute_command<'a>(
 }
 
 fn do_init(init_config: InitArgs, git_clone_capability: &GitCloneAndCheckoutCap) -> BuildResult {
-    log::info!("Doing Init");
+    // log::info!("Doing Init");
     if Path::new("Lingo.toml").exists() {
         log::info!("Already initialized, no need to do anything else.");
         return Ok(()); // Return early if Lingo.toml exists
     }
 
     let initial_config = ConfigFile::new_for_init_task(&init_config)?;
-    log::info!("Creating Files!");
+    // log::info!("Creating Files!");
     initial_config.write(Path::new("./Lingo.toml"))?;
-    log::info!("Written Toml File!");
+    // log::info!("Written Toml File!");
     initial_config.setup_example(
         init_config.platform,
         init_config.language.unwrap_or(TargetLanguage::Cpp),

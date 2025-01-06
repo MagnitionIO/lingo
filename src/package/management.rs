@@ -185,6 +185,8 @@ impl DependencyManager {
                     }
                 };
 
+                // log::info!("NODE:{:?}", node);
+
                 sub_dependencies.push(node);
             } else {
                 break;
@@ -236,6 +238,8 @@ impl DependencyManager {
             }
         };
 
+        // log::info!("DEPENDENCY config:{:?}", config);
+
         if !package.version.matches(&read_toml.package.version) {
             error!("version mismatch between specified location and requested version requirement");
             return Err(LingoError::LingoVersionMismatch(format!(
@@ -278,12 +282,16 @@ impl DependencyManager {
         let mut constraints = HashMap::<&String, Vec<Requirement>>::new();
         let mut sources = HashMap::<&String, Vec<&DependencyTreeNode>>::new();
 
+        // log::info!("root_nodes:{:?}", root_nodes);
+
         // this basically flattens the
         let mut nodes = Vec::new();
         for node in root_nodes {
             let mut children = node.aggregate();
             nodes.append(&mut children);
         }
+
+        // log::info!("flatted_root_nodes:{:?}", nodes);
 
         for node in &nodes {
             let constraint = &node.package.version;
@@ -302,6 +310,8 @@ impl DependencyManager {
                 })
                 .or_insert(vec![&node]);
         }
+
+        // log::info!("constraints:{:?} sources:{:?}", constraints, sources);
 
         let merged: Vec<(&String, Vec<Requirement>, Vec<&DependencyTreeNode>)> = constraints
             .into_iter()

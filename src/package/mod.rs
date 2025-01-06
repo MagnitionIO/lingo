@@ -232,7 +232,7 @@ impl LibraryFile {
             .unwrap_or(file_name.unwrap_or(package_name.to_string()).to_string());
 
         Library {
-            name,
+            name: name.clone(),
             location: {
                 let mut abs = path.to_path_buf();
                 abs.push(self.location.unwrap_or(DEFAULT_LIBRARY_FOLDER.into()));
@@ -240,7 +240,7 @@ impl LibraryFile {
             },
             target: self.target,
             platform: self.platform.unwrap_or(Platform::Native),
-            properties: self.properties.from(path),
+            properties: self.properties.from(&name),
             output_root: path.join(OUTPUT_DIRECTORY),
         }
     }
@@ -337,7 +337,7 @@ impl ConfigFile {
                 path: "main.cc".into(),
                 target: init_args.get_target_language(),
             }];
-        log::info!("main_reactors: {:?}", main_reactors);
+        // log::info!("main_reactors: {:?}", main_reactors);
         let app_specs: Vec<AppFile> = main_reactors
             .into_iter()
             .map(|spec: analyzer::MainReactorSpec| AppFile {
