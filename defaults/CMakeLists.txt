@@ -6,19 +6,22 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
 
-set(LF_MAIN_TARGET hello)
+set(MAG_MAIN_TARGET hello)
 
-set (SHARED_PATH "/usr/local/share/magnition")
-set (SHARED_LIB_PATH "/usr/local/lib")
+include(GNUInstallDirs)
 
-add_executable(${LF_MAIN_TARGET}
+set (MagnitionLIB  MagnitionLib)
+set (ReactorSDK MagnitionReactorSDK)
+set (MAGNITION_REACTORS MagnitionReactors)
+
+set (MagnitionLIB_PATH ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}/${MagnitionLIB})
+set (ReactorSDK_PATH ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}/${ReactorSDK})
+set (MAGNITION_REACTORS_PATH ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}/${MAGNITION_REACTORS})
+
+add_executable(${MAG_MAIN_TARGET}
     main.cc
 )
 
-include("${SHARED_PATH}/MagnitionReactorBase/magnition_reactor_base.cmake")
+include(${ReactorSDK_PATH}/magnition_reactor_base.cmake)
 
-if(MSVC)
-  target_compile_options(${LF_MAIN_TARGET} PRIVATE /W4)
-else()
-  target_compile_options(${LF_MAIN_TARGET} PRIVATE -Wall -Wextra -pedantic)
-endif()
+target_compile_options(${MAG_MAIN_TARGET} PRIVATE -Wall -Wextra -pedantic)
