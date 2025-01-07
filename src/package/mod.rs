@@ -333,7 +333,13 @@ impl ConfigFile {
     pub fn new_for_init_task(init_args: &InitArgs) -> io::Result<ConfigFile> {
         let main_reactors = 
             vec![analyzer::MainReactorSpec {
-                name: "main".into(),
+                name: std::env::current_dir()
+                    .expect("error while reading current directory")
+                    .as_path()
+                    .file_name()
+                    .expect("cannot get file name")
+                    .to_string_lossy()
+                    .to_string(),
                 path: "main.cc".into(),
                 target: init_args.get_target_language(),
             }];
@@ -402,7 +408,9 @@ impl ConfigFile {
             _ => panic!("Target langauge not supported yet"), //FIXME: Add support for Rust.
         };
 
-        write(Path::new("CMakeLists.txt"), cmake_file)?;
+        let modified_cmake_file = cmake_file.replace("set(MAG_MAIN_TARGET hello)", &format!("set(MAG_MAIN_TARGET {})", self.package.name));
+
+        write(Path::new("CMakeLists.txt"), modified_cmake_file)?;
         Ok(())
     }
 
