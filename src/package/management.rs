@@ -5,6 +5,7 @@ use versions::{Requirement, Versioning};
 use crate::util::sha1dir;
 use crate::{GitCloneAndCheckoutCap, GitUrl};
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
@@ -142,7 +143,6 @@ impl DependencyManager {
         // writes the lock file down
         let mut lock_file = File::create(target_path.join("../Lingo.lock"))?;
 
-        println!("{:?}", lock.dependencies);
         let serialized_toml = toml::to_string(&lock).expect("cannot generate toml");
 
         lock_file.write_all(serialized_toml.as_ref())?;
@@ -184,6 +184,8 @@ impl DependencyManager {
                         return Err(e);
                     }
                 };
+
+                // log::info!("NODE:{:?}", node);
 
                 sub_dependencies.push(node);
             } else {
@@ -235,6 +237,8 @@ impl DependencyManager {
                 );
             }
         };
+
+        // log::info!("DEPENDENCY config:{:?}", config);
 
         if !package.version.matches(&read_toml.package.version) {
             error!("version mismatch between specified location and requested version requirement");
@@ -346,6 +350,22 @@ impl DependencyManager {
 
             selection.push((*package).clone());
         }
+
+        let mut seen = HashSet::new();
+        let mut unique_nodes = Vec::new();
+
+        for node in nodes.into_iter().rev() {
+            if seen.insert(node.name.clone()) {
+                unique_nodes.push(node);
+            }
+        }
+
+        selection.sort_by(|a, b| {
+            let index_a = unique_nodes.iter().position(|node| node.name == a.name && node.version == a.version);
+            let index_b = unique_nodes.iter().position(|node| node.name == b.name && node.version == b.version);
+
+            index_a.cmp(&index_b)
+        });
 
         Ok(selection)
     }

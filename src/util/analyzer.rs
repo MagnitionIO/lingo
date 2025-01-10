@@ -37,6 +37,7 @@ fn search_inside_file(path: &Path) -> io::Result<Option<MainReactorSpec>> {
     Ok(None)
 }
 
+#[derive(Debug)]
 pub struct MainReactorSpec {
     pub name: String,
     pub target: TargetLanguage,

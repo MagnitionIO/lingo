@@ -124,7 +124,7 @@ pub enum Command {
     Clean,
 }
 
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 #[command(name = "Lingua Franca package manager and build tool")]
 #[command(author = "tassilo.tanneberger@tu-dresden.de")]
 #[command(version = env!("CARGO_PKG_VERSION"))]

@@ -62,7 +62,7 @@ pub struct AppVec {
 }
 
 /// The Lingo.toml format is defined by this struct
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize, Debug)]
 pub struct ConfigFile {
     /// top level package description
     pub package: PackageDescription,
@@ -80,7 +80,7 @@ pub struct ConfigFile {
 }
 
 /// This struct is used after filling in all the defaults
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Config {
     /// top level package description
     pub package: PackageDescription,
@@ -96,7 +96,7 @@ pub struct Config {
 }
 
 /// The Format inside the Lingo.toml under [lib]
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize, Debug)]
 pub struct LibraryFile {
     /// if not specified will default to value specified in the package description
     pub name: Option<String>,
@@ -114,7 +114,7 @@ pub struct LibraryFile {
     pub properties: LibraryTargetPropertiesFile,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Library {
     /// if not specified will default to value specified in the package description
     pub name: String,
@@ -136,7 +136,7 @@ pub struct Library {
 }
 
 /// Schema of the configuration parsed from the Lingo.toml
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize, Debug)]
 pub struct AppFile {
     /// if not specified will default to value specified in the package description
     pub name: Option<String>,
@@ -154,7 +154,7 @@ pub struct AppFile {
     pub properties: AppTargetPropertiesFile,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct App {
     /// Absolute path to the directory where the Lingo.toml file is located.
     pub root_path: PathBuf,
@@ -232,7 +232,7 @@ impl LibraryFile {
             .unwrap_or(file_name.unwrap_or(package_name.to_string()).to_string());
 
         Library {
-            name,
+            name: name.clone(),
             location: {
                 let mut abs = path.to_path_buf();
                 abs.push(self.location.unwrap_or(DEFAULT_LIBRARY_FOLDER.into()));
@@ -240,7 +240,7 @@ impl LibraryFile {
             },
             target: self.target,
             platform: self.platform.unwrap_or(Platform::Native),
-            properties: self.properties.from(path),
+            properties: self.properties.from(&name),
             output_root: path.join(OUTPUT_DIRECTORY),
         }
     }
@@ -315,7 +315,7 @@ where
     deserializer.deserialize_str(VersioningVisitor)
 }
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct PackageDescription {
     pub name: String,
     #[serde(
@@ -331,19 +331,22 @@ pub struct PackageDescription {
 
 impl ConfigFile {
     pub fn new_for_init_task(init_args: &InitArgs) -> io::Result<ConfigFile> {
-        let src_path = Path::new(DEFAULT_EXECUTABLE_FOLDER);
-        let main_reactors = if src_path.exists() {
-            analyzer::find_main_reactors(src_path)?
-        } else {
+        let main_reactors = 
             vec![analyzer::MainReactorSpec {
-                name: "Main".into(),
-                path: src_path.join("Main.lf"),
+                name: std::env::current_dir()
+                    .expect("error while reading current directory")
+                    .as_path()
+                    .file_name()
+                    .expect("cannot get file name")
+                    .to_string_lossy()
+                    .to_string(),
+                path: "main.cc".into(),
                 target: init_args.get_target_language(),
-            }]
-        };
-        let app_specs = main_reactors
+            }];
+        // log::info!("main_reactors: {:?}", main_reactors);
+        let app_specs: Vec<AppFile> = main_reactors
             .into_iter()
-            .map(|spec| AppFile {
+            .map(|spec: analyzer::MainReactorSpec| AppFile {
                 name: Some(spec.name),
                 main: Some(spec.path),
                 target: spec.target,
@@ -393,16 +396,21 @@ impl ConfigFile {
 
     // Sets up a standard LF project for "native" development and deployment
     pub fn setup_native(&self, target_language: TargetLanguage) -> BuildResult {
-        std::fs::create_dir_all("./src")?;
         let hello_world_code: &'static str = match target_language {
-            TargetLanguage::Cpp => include_str!("../../defaults/HelloCpp.lf"),
-            TargetLanguage::C => include_str!("../../defaults/HelloC.lf"),
-            TargetLanguage::Python => include_str!("../../defaults/HelloPy.lf"),
-            TargetLanguage::TypeScript => include_str!("../../defaults/HelloTS.lf"),
+            TargetLanguage::Cpp => include_str!("../../defaults/main.cc"),
             _ => panic!("Target langauge not supported yet"), //FIXME: Add support for Rust.
         };
 
-        write(Path::new("./src/Main.lf"), hello_world_code)?;
+        write(Path::new("main.cc"), hello_world_code)?;
+
+        let cmake_file: &'static str = match target_language {
+            TargetLanguage::Cpp => include_str!("../../defaults/CMakeLists.txt"),
+            _ => panic!("Target langauge not supported yet"), //FIXME: Add support for Rust.
+        };
+
+        let modified_cmake_file = cmake_file.replace("set(MAG_MAIN_TARGET hello)", &format!("set(MAG_MAIN_TARGET {})", self.package.name));
+
+        write(Path::new("CMakeLists.txt"), modified_cmake_file)?;
         Ok(())
     }
 
@@ -484,6 +492,7 @@ impl ConfigFile {
                 ),
             }
         } else {
+            log::info!("Folders already exist");
             Err(Box::new(LingoError::InvalidProjectLocation(
                 env::current_dir().expect("cannot fetch current working directory"),
             )))

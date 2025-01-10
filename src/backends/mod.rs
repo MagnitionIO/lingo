@@ -29,6 +29,8 @@ pub fn execute_command<'a>(
     let mut result = BatchBuildResults::new();
     let dependencies = Vec::from_iter(config.dependencies.clone());
 
+    // log::info!("Building command running config:{:?}", config);
+
     match command {
         CommandSpec::Build(_build) => {
             let manager = match DependencyManager::from_dependencies(
@@ -45,6 +47,8 @@ pub fn execute_command<'a>(
 
             // enriching the apps with the target properties from the libraries
             let library_properties = manager.get_target_properties().expect("lib properties");
+
+            // log::info!("library_properties:{:?}", library_properties);
 
             // merging app with library target properties
             for app in &mut config.apps {
@@ -65,6 +69,8 @@ pub fn execute_command<'a>(
             .or_default()
             .push(app);
     }
+
+    // log::info!("build-system to apps:{:?}", by_build_system);
 
     for (build_system, apps) in by_build_system {
         let mut sub_res = BatchBuildResults::for_apps(&apps);
@@ -103,7 +109,7 @@ pub fn execute_command<'a>(
     result
 }
 
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum BuildProfile {
     /// Compile with optimizations.
     Release,
@@ -111,6 +117,7 @@ pub enum BuildProfile {
     Debug,
 }
 
+#[derive(Debug)]
 pub struct BuildCommandOptions {
     /// Build profile, mostly relevant for target compilation.
     pub profile: BuildProfile,

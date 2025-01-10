@@ -45,7 +45,7 @@ impl MergeTargetProperty for AutoCmakeLoad {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LibraryTargetPropertiesFile {
     /// cmake include only available for C and CPP
     #[serde(rename = "cmake-include", default)]
@@ -73,14 +73,12 @@ pub struct LibraryTargetProperties {
 }
 
 impl LibraryTargetPropertiesFile {
-    pub fn from(self, base_path: &Path) -> LibraryTargetProperties {
+    pub fn from(self, name: &String) -> LibraryTargetProperties {
         LibraryTargetProperties {
             cmake_include: AutoCmakeLoad(
                 self.cmake_include
                     .map(|cmake_file| {
-                        let absolute_path = base_path.join(cmake_file);
-                        std::fs::read_to_string(absolute_path)
-                            .expect("invalid file {absolute_path}")
+                        format!("include(lfc_include/{}/{})", name, cmake_file.to_string_lossy())
                     })
                     .unwrap_or_default(),
             ),
@@ -90,7 +88,7 @@ impl LibraryTargetPropertiesFile {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Default)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct AppTargetPropertiesFile {
     /// cmake include only available for C and CPP
     #[serde(rename = "cmake-include", default)]
@@ -101,7 +99,7 @@ pub struct AppTargetPropertiesFile {
     pub fast: bool,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct AppTargetProperties {
     /// cmake include only available for C and CPP
     cmake_include: AutoCmakeLoad,

@@ -76,7 +76,7 @@ impl DependencyTreeNode {
             include_path: self.include_path.clone(),
             hash: self.hash.clone(),
             dependencies: Vec::new(),
-            properties: Default::default(),
+            properties: self.properties.clone(),
         }
     }
 
