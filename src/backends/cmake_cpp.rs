@@ -40,11 +40,15 @@ fn gen_cmake_files(app: &App, options: &BuildCommandOptions) -> BuildResult {
 
     // read file and append cmake include to generated cmake file
     let mut content = fs::read_to_string(&cmake_file)?;
-    let include_statement = format!(
+
+    let include_dir = "\ninclude_directories(lfc_include)";
+    content += &*include_dir;
+
+    let include_cmake = format!(
         "\ninclude({}/aggregated_cmake_include.cmake)",
         app_build_folder.display()
     );
-    content += &*include_statement;
+    content += &*include_cmake;
 
     // overwrite cmake file
     let mut f = fs::OpenOptions::new().write(true).open(&cmake_file)?;
@@ -53,6 +57,7 @@ fn gen_cmake_files(app: &App, options: &BuildCommandOptions) -> BuildResult {
 
     // cmake args
     let mut cmake = Command::new("cmake");
+    cmake.env("CMAKE_COLOR_MAKEFILE", "YES");
     cmake.arg(format!(
         "-DCMAKE_BUILD_TYPE={}",
         if options.profile == BuildProfile::Release {
@@ -98,6 +103,7 @@ fn do_cmake_build(results: &mut BatchBuildResults, options: &BuildCommandOptions
             // compile everything
             let mut cmake = Command::new("cmake");
             cmake.current_dir(&build_dir);
+            cmake.env("CMAKE_COLOR_MAKEFILE", "YES");
             cmake.args(["--build", "."]);
             // for app in apps {
             //     // add one target arg for each app

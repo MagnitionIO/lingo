@@ -47,3 +47,4 @@ log = "0.4"
 colored = "2.1.0"
 parking_lot = "0.12"
 sha1 = "0.10"
+indexmap = { version = "1.7", features = ["serde"] }

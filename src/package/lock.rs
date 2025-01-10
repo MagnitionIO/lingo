@@ -3,7 +3,7 @@ use colored::Colorize;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use versions::Versioning;
 
-use log::error;
+use log::{error, info};
 use serde::de::Error as DeserializationError;
 use serde::ser::Error as SerializationError;
 use std::cmp::PartialEq;
@@ -12,6 +12,7 @@ use std::fmt::Display;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
+use indexmap::IndexMap;
 
 use crate::GitCloneAndCheckoutCap;
 
@@ -186,7 +187,7 @@ impl Serialize for PackageLockSource {
 pub struct DependencyLock {
     /// mapping from package name to location
     #[serde(flatten)]
-    pub dependencies: HashMap<String, PackageLock>,
+    pub dependencies: IndexMap<String, PackageLock>,
 
     /// this will be populated when the project is successfully loaded from the lock file
     #[serde(skip)]
@@ -195,13 +196,14 @@ pub struct DependencyLock {
 
 impl DependencyLock {
     pub(crate) fn create(selected_dependencies: Vec<DependencyTreeNode>) -> DependencyLock {
-        let mut map = HashMap::new();
+        let mut map = IndexMap::new();
         for dependency in &selected_dependencies {
             map.insert(
                 dependency.name.clone(),
                 PackageLock::from(dependency.clone()),
             );
         }
+
         Self {
             dependencies: map,
             loaded_dependencies: selected_dependencies,
@@ -227,7 +229,7 @@ impl DependencyLock {
             let hash = sha1dir::checksum_current_dir(&temp, false);
 
             if hash.to_string() != lock.checksum {
-                error!("checksum does not match aborting!");
+                println!("checksum does not match aborting!");
             }
 
             let lingo_toml_text = fs::read_to_string(temp.join("Lingo.toml"))?;

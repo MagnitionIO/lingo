@@ -5,6 +5,7 @@ use versions::{Requirement, Versioning};
 use crate::util::sha1dir;
 use crate::{GitCloneAndCheckoutCap, GitUrl};
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
@@ -142,7 +143,6 @@ impl DependencyManager {
         // writes the lock file down
         let mut lock_file = File::create(target_path.join("../Lingo.lock"))?;
 
-        println!("{:?}", lock.dependencies);
         let serialized_toml = toml::to_string(&lock).expect("cannot generate toml");
 
         lock_file.write_all(serialized_toml.as_ref())?;
@@ -282,16 +282,12 @@ impl DependencyManager {
         let mut constraints = HashMap::<&String, Vec<Requirement>>::new();
         let mut sources = HashMap::<&String, Vec<&DependencyTreeNode>>::new();
 
-        // log::info!("root_nodes:{:?}", root_nodes);
-
         // this basically flattens the
         let mut nodes = Vec::new();
         for node in root_nodes {
             let mut children = node.aggregate();
             nodes.append(&mut children);
         }
-
-        // log::info!("flatted_root_nodes:{:?}", nodes);
 
         for node in &nodes {
             let constraint = &node.package.version;
@@ -310,8 +306,6 @@ impl DependencyManager {
                 })
                 .or_insert(vec![&node]);
         }
-
-        // log::info!("constraints:{:?} sources:{:?}", constraints, sources);
 
         let merged: Vec<(&String, Vec<Requirement>, Vec<&DependencyTreeNode>)> = constraints
             .into_iter()
@@ -356,6 +350,22 @@ impl DependencyManager {
 
             selection.push((*package).clone());
         }
+
+        let mut seen = HashSet::new();
+        let mut unique_nodes = Vec::new();
+
+        for node in nodes.into_iter().rev() {
+            if seen.insert(node.name.clone()) {
+                unique_nodes.push(node);
+            }
+        }
+
+        selection.sort_by(|a, b| {
+            let index_a = unique_nodes.iter().position(|node| node.name == a.name && node.version == a.version);
+            let index_b = unique_nodes.iter().position(|node| node.name == b.name && node.version == b.version);
+
+            index_a.cmp(&index_b)
+        });
 
         Ok(selection)
     }
