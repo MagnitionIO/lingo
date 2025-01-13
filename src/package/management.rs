@@ -361,8 +361,8 @@ impl DependencyManager {
         }
 
         selection.sort_by(|a, b| {
-            let index_a = unique_nodes.iter().position(|node| node.name == a.name && node.version == a.version);
-            let index_b = unique_nodes.iter().position(|node| node.name == b.name && node.version == b.version);
+            let index_a = unique_nodes.iter().position(|node| node.name == a.name);
+            let index_b = unique_nodes.iter().position(|node| node.name == b.name);
 
             index_a.cmp(&index_b)
         });
