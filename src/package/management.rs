@@ -12,6 +12,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use url::{ParseError, Url};
+use std::process::Command;
 
 use crate::package::lock::{PackageLockSource, PackageLockSourceType};
 use crate::package::{
@@ -93,7 +94,66 @@ impl PackageDetails {
     }
 }
 
+fn get_untracked_dirs() -> Vec<String> {
+    let output = Command::new("git")
+        .arg("ls-files")
+        .arg("--others")
+        .arg("--exclude-standard")
+        .output()
+        .expect("Failed to run git ls-files");
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    let mut untracked_dirs = HashSet::new();
+
+    let untracked_dirs_iter = stdout
+        .lines()
+        .filter_map(|line| {
+            let path = line.trim();
+            if let Some(pos) = path.rfind('/') {
+                Some(path[..pos].to_string())
+            } else {
+                None
+            }
+        });
+
+    for dir in untracked_dirs_iter {
+        untracked_dirs.insert(dir);
+    }
+
+    untracked_dirs.into_iter().collect()
+}
+
 impl DependencyManager {
+    pub fn cleanup(target_path: &Path)  -> anyhow::Result<DependencyManager> {
+
+        let result = DependencyManager::default();
+        let lock_ref: DependencyLock;
+        let lock_file = target_path.join("Lingo.lock");
+
+        if lock_file.exists() {
+            lock_ref = toml::from_str::<DependencyLock>(&fs::read_to_string(lock_file.clone())?)
+                .expect("cannot parse lock");
+
+            let untracked_dirs = get_untracked_dirs();
+            log::info!("untracked_dirs:{:?}", untracked_dirs);
+
+            for (_, lock) in lock_ref.dependencies.iter() {
+                let package_path = target_path.join(&lock.name);
+
+                if untracked_dirs.contains(&lock.name) {
+                    log::info!("Removing untracked directory: {}", lock.name);
+                    if package_path.exists() {
+                        fs::remove_dir_all(package_path).expect("Failed to remove directory");
+                        log::info!("Directory {} removed", lock.name);
+                    }
+                }
+            }
+            fs::remove_file(lock_file.clone()).expect("Failed to remove Lingo.lock");
+        }
+        return Ok(result);
+    }
+
     pub fn from_dependencies(
         dependencies: Vec<(String, PackageDetails)>,
         target_path: &Path,
@@ -149,7 +209,8 @@ impl DependencyManager {
 
         // moves the selected packages into the include folder
         let include_folder = target_path.join("lfc_include");
-        lock.create_library_folder(&library_path, &include_folder)
+        let include_path = &PathBuf::from(".");
+        lock.create_library_folder(&include_path,&library_path, &include_folder)
             .expect("creating lock folder failed");
 
         // saves the lockfile with the dependency manager
