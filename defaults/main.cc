@@ -1,5 +1,5 @@
 
-#include <magnition-reactor-cpp.hh>
+#include <MagnitionReactorSDK/magnition-reactor-cpp.hh>
 using namespace std;
 
 
@@ -59,16 +59,23 @@ public:
     }
 };
 
-int main() {
-  unsigned workers = 1;
-  bool fast{false};
-  reactor::Duration timeout = reactor::Duration::max();
+int main(int argc, char **argv) {
+    unsigned workers = 1;
+    bool fast{false};
+    reactor::Duration timeout = reactor::Duration::max();
 
-  std::cout << "parameters - workers:" << workers << " fast:" << (fast ? "True" : "False") << " timeout:" << timeout << std::endl;
+    bool visualize = false;
 
-  auto *sim = MagnitionSimulator::create_simulator_instance (workers, fast, timeout, false);
-  Main *hello = new Main("Hello", sim, std::make_unique<Main::Parameters>("Source", sim));
+    if (argc > 1) {
+        string v_str = argv[1];
+        visualize =  (v_str == "true") ? true : false;
+    }
 
-   sim->run();
+    std::cout << "parameters - workers:" << workers << " fast:" << (fast ? "True" : "False") << " timeout:" << timeout << " visualize:" << visualize << std::endl;
+
+    auto *sim = MagnitionSimulator::create_simulator_instance (workers, fast, timeout, visualize);
+    Main *hello = new Main("Hello", sim, std::make_unique<Main::Parameters>("Hello", sim));
+
+    sim->run();
   return 0;
 }

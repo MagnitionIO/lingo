@@ -72,6 +72,12 @@ pub struct BuildArgs {
     /// Number of threads to use for parallel builds. Zero means it will be determined automatically.
     #[arg(short, long, default_value_t = 0)]
     pub threads: usize,
+
+    #[arg(long)]
+    pub config_file: Option<PathBuf>,
+
+    #[arg(short, long)]
+    pub visualize: bool,
 }
 
 impl BuildArgs {

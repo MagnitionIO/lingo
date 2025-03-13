@@ -190,6 +190,17 @@ fn execute_command<'a>(
             res.map(|app| {
                 // let mut command = Command::new(app.executable_path());
                 let mut command = Command::new(app.output_root.join("build").join(app.name.clone()));
+                let cfg_file = build_command_args.config_file.as_ref().map(|path| path.to_str().unwrap_or_default());
+                let visualize = build_command_args.visualize;
+
+                command.arg(visualize.to_string());
+
+                if let Some(cfg_file_str) = cfg_file {
+                    command.arg(cfg_file_str);  // Add the config file path if it's present
+                } else {
+                    command.arg("");
+                }
+
                 // log::info!("running command:{:?}", command);
                 liblingo::util::run_and_capture(&mut command)?;
                 Ok(())
