@@ -237,8 +237,7 @@ fn build<'a>(args: &BuildArgs, config: &'a mut Config) -> BatchBuildResults<'a> 
         CommandSpec::Build(BuildCommandOptions {
             profile: args.build_profile(),
             compile_target_code: !args.no_compile,
-            lfc_exec_path: liblingo::util::find_lfc_exec(args, Box::new(do_which))
-                .expect("TODO replace me"),
+            lfc_exec_path: "".into(),
             max_threads: args.threads,
             keep_going: args.keep_going,
         }),
