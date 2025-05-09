@@ -18,13 +18,18 @@ fn gen_cmake_files(app: &App, options: &BuildCommandOptions) -> BuildResult {
 
     let src = &app.main_reactor;
     let src_folder = src.parent().expect("parent path is empty");
-    let dst = app.output_root.join(src.file_name().expect("Main file name not found"));
+    let dst = app
+        .output_root
+        .join(src.file_name().expect("Main file name not found"));
     let dst_folder = dst.parent().expect("destination path is empty");
 
     // log::info!("src:{:?} dst:{:?} src_folder:{:?} dst_folder:{:?}", src, dst, src_folder, dst_folder);
 
     fs::copy(src, &dst)?;
-    fs::copy(src_folder.join("CMakeLists.txt"), dst_folder.join("CMakeLists.txt"));
+    fs::copy(
+        src_folder.join("CMakeLists.txt"),
+        dst_folder.join("CMakeLists.txt"),
+    );
 
     // location of the cmake file
     let app_build_folder = dst_folder;

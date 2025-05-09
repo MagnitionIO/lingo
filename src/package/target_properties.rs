@@ -78,7 +78,11 @@ impl LibraryTargetPropertiesFile {
             cmake_include: AutoCmakeLoad(
                 self.cmake_include
                     .map(|cmake_file| {
-                        format!("include(lfc_include/{}/{})", name, cmake_file.to_string_lossy())
+                        format!(
+                            "include(lfc_include/{}/{})",
+                            name,
+                            cmake_file.to_string_lossy()
+                        )
                     })
                     .unwrap_or_default(),
             ),

@@ -10,11 +10,12 @@ use std::fs;
 use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::str::FromStr;
 use url::{ParseError, Url};
-use std::process::Command;
 
 use crate::package::lock::{PackageLockSource, PackageLockSourceType};
+use crate::package::registry::{RegistryArtifact, RegistryClient};
 use crate::package::{
     lock::DependencyLock,
     target_properties::LibraryTargetProperties,
@@ -22,7 +23,6 @@ use crate::package::{
     ConfigFile, LIBRARY_DIRECTORY,
 };
 use crate::util::errors::LingoError;
-use crate::package::registry::{RegistryArtifact, RegistryClient};
 use tokio::runtime::Runtime;
 
 #[derive(Default)]
@@ -94,13 +94,13 @@ impl PackageDetails {
             ProjectSource::Registry(package_name) => {
                 // Create a runtime for async operations
                 let rt = Runtime::new()?;
-                
+
                 // Create registry client using global configuration
                 let client = RegistryClient::new();
-                
+
                 // Convert Requirement to Versioning for registry lookup
                 let version = Versioning::from_str(&self.version.to_string())?;
-                
+
                 // Resolve and download the artifact
                 rt.block_on(async {
                     if let Some(artifact) = client.resolve_artifact(package_name, &version).await? {
@@ -131,16 +131,14 @@ fn get_untracked_dirs() -> Vec<String> {
 
     let mut untracked_dirs = HashSet::new();
 
-    let untracked_dirs_iter = stdout
-        .lines()
-        .filter_map(|line| {
-            let path = line.trim();
-            if let Some(pos) = path.rfind('/') {
-                Some(path[..pos].to_string())
-            } else {
-                None
-            }
-        });
+    let untracked_dirs_iter = stdout.lines().filter_map(|line| {
+        let path = line.trim();
+        if let Some(pos) = path.rfind('/') {
+            Some(path[..pos].to_string())
+        } else {
+            None
+        }
+    });
 
     for dir in untracked_dirs_iter {
         untracked_dirs.insert(dir);
@@ -150,8 +148,7 @@ fn get_untracked_dirs() -> Vec<String> {
 }
 
 impl DependencyManager {
-    pub fn cleanup(target_path: &Path)  -> anyhow::Result<DependencyManager> {
-
+    pub fn cleanup(target_path: &Path) -> anyhow::Result<DependencyManager> {
         let result = DependencyManager::default();
         let lock_ref: DependencyLock;
         let lock_file = target_path.join("Lingo.lock");
@@ -235,7 +232,7 @@ impl DependencyManager {
         // moves the selected packages into the include folder
         let include_folder = target_path.join("lfc_include");
         let include_path = &PathBuf::from(".");
-        lock.create_library_folder(&include_path,&library_path, &include_folder)
+        lock.create_library_folder(&include_path, &library_path, &include_folder)
             .expect("creating lock folder failed");
 
         // saves the lockfile with the dependency manager

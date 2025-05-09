@@ -14,4 +14,4 @@ impl Default for RegistryConfig {
             auth_token: None,
         }
     }
-} 
+}

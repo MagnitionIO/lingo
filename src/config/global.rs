@@ -1,9 +1,9 @@
-use std::path::PathBuf;
-use std::fs;
-use anyhow::Result;
-use serde::{Deserialize, Serialize};
-use dirs::home_dir;
 use crate::config::registry::RegistryConfig;
+use anyhow::Result;
+use dirs::home_dir;
+use serde::{Deserialize, Serialize};
+use std::fs;
+use std::path::PathBuf;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GlobalConfig {
@@ -28,7 +28,7 @@ impl GlobalConfigManager {
         let home = home_dir().ok_or_else(|| anyhow::anyhow!("Could not find home directory"))?;
         let config_dir = home.join(".lingo");
         let config_file = config_dir.join("config.toml");
-        
+
         Ok(Self {
             config_dir,
             config_file,
@@ -51,9 +51,9 @@ impl GlobalConfigManager {
     pub fn save_config(&self, config: &GlobalConfig) -> Result<()> {
         // Create config directory if it doesn't exist
         fs::create_dir_all(&self.config_dir)?;
-        
+
         let contents = toml::to_string(config)?;
         fs::write(&self.config_file, contents)?;
         Ok(())
     }
-} 
+}

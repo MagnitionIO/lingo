@@ -10,12 +10,12 @@ use git2::{BranchType, Object, ObjectType, Reference, Repository};
 use liblingo::args::InitArgs;
 use liblingo::args::{BuildArgs, Command as ConsoleCommand, CommandLineArgs};
 use liblingo::backends::{BatchBuildResults, BuildCommandOptions, CommandSpec};
+use liblingo::config::init_global_config;
 use liblingo::package::tree::GitLock;
 use liblingo::package::{Config, ConfigFile};
 use liblingo::util::errors::{BuildResult, LingoError};
 use liblingo::{GitCloneAndCheckoutCap, GitCloneError, GitUrl, WhichCapability, WhichError};
 use log::LevelFilter;
-use liblingo::config::init_global_config;
 
 fn do_which(cmd: &str) -> Result<PathBuf, WhichError> {
     which::which(cmd).map_err(|err| match err {
@@ -96,8 +96,11 @@ fn do_read_to_string(p: &Path) -> io::Result<String> {
 fn main() -> anyhow::Result<()> {
     // Initialize global configuration
     init_global_config()?;
-    
-    print_logger::new().level_filter(LevelFilter::Trace).init().unwrap();
+
+    print_logger::new()
+        .level_filter(LevelFilter::Trace)
+        .init()
+        .unwrap();
     // parses command line arguments
     let args = CommandLineArgs::parse();
     // log::info!("arguments: {:?}", args);
@@ -199,14 +202,18 @@ fn execute_command<'a>(
             let mut res = build(&build_command_args, config);
             res.map(|app| {
                 // let mut command = Command::new(app.executable_path());
-                let mut command = Command::new(app.output_root.join("build").join(app.name.clone()));
-                let cfg_file = build_command_args.config_file.as_ref().map(|path| path.to_str().unwrap_or_default());
+                let mut command =
+                    Command::new(app.output_root.join("build").join(app.name.clone()));
+                let cfg_file = build_command_args
+                    .config_file
+                    .as_ref()
+                    .map(|path| path.to_str().unwrap_or_default());
                 let visualize = build_command_args.visualize;
 
                 command.arg(visualize.to_string());
 
                 if let Some(cfg_file_str) = cfg_file {
-                    command.arg(cfg_file_str);  // Add the config file path if it's present
+                    command.arg(cfg_file_str); // Add the config file path if it's present
                 } else {
                     command.arg("");
                 }

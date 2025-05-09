@@ -3,6 +3,7 @@ use colored::Colorize;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use versions::Versioning;
 
+use indexmap::IndexMap;
 use log::{error, info};
 use serde::de::Error as DeserializationError;
 use serde::ser::Error as SerializationError;
@@ -12,7 +13,6 @@ use std::fmt::Display;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
-use indexmap::IndexMap;
 
 use crate::GitCloneAndCheckoutCap;
 

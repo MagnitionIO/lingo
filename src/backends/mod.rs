@@ -2,9 +2,9 @@ use log::error;
 use rayon::prelude::*;
 
 use std::collections::HashMap;
+use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::fs;
 
 use crate::args::{BuildSystem, Platform, TargetLanguage};
 use crate::package::{
@@ -67,8 +67,7 @@ pub fn execute_command<'a>(
                 log::info!("Build folder removed");
             }
 
-            let cleanup_result = match DependencyManager::cleanup(&PathBuf::from(".")
-            ) {
+            let cleanup_result = match DependencyManager::cleanup(&PathBuf::from(".")) {
                 Ok(value) => value,
                 Err(e) => {
                     error!("failed to create dependency manager because of {e}");

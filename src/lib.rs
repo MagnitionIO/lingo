@@ -3,9 +3,9 @@ use std::io;
 
 pub mod args;
 pub mod backends;
+pub mod config;
 pub mod package;
 pub mod util;
-pub mod config;
 
 #[derive(Debug)]
 pub enum WhichError {
