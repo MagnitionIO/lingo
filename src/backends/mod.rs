@@ -67,7 +67,7 @@ pub fn execute_command<'a>(
                 log::info!("Build folder removed");
             }
 
-            let cleanup_result = match DependencyManager::cleanup(&PathBuf::from(".")) {
+            let _cleanup_result = match DependencyManager::cleanup(&PathBuf::from(".")) {
                 Ok(value) => value,
                 Err(e) => {
                     error!("failed to create dependency manager because of {e}");

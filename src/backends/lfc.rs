@@ -109,7 +109,7 @@ impl<'a> LfcJsonArgs<'a> {
     }
 }
 
-impl<'a> Display for LfcJsonArgs<'a> {
+impl Display for LfcJsonArgs<'_> {
     /// convert lfc properties to string
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let string = self

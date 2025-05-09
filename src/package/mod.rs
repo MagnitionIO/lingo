@@ -296,7 +296,7 @@ where
 
 struct VersioningVisitor;
 
-impl<'de> Visitor<'de> for VersioningVisitor {
+impl Visitor<'_> for VersioningVisitor {
     type Value = Versioning;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {

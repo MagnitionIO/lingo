@@ -15,7 +15,7 @@ use std::str::FromStr;
 use url::{ParseError, Url};
 
 use crate::package::lock::{PackageLockSource, PackageLockSourceType};
-use crate::package::registry::{RegistryArtifact, RegistryClient};
+use crate::package::registry::RegistryClient;
 use crate::package::{
     lock::DependencyLock,
     target_properties::LibraryTargetProperties,
@@ -111,7 +111,7 @@ impl PackageDetails {
                     }
                 })
             }
-            ProjectSource::TarBall(url) => {
+            ProjectSource::TarBall(_url) => {
                 // TODO: Implement tarball download and extraction
                 Ok(())
             }
@@ -133,11 +133,7 @@ fn get_untracked_dirs() -> Vec<String> {
 
     let untracked_dirs_iter = stdout.lines().filter_map(|line| {
         let path = line.trim();
-        if let Some(pos) = path.rfind('/') {
-            Some(path[..pos].to_string())
-        } else {
-            None
-        }
+        path.rfind('/').map(|pos| path[..pos].to_string())
     });
 
     for dir in untracked_dirs_iter {
@@ -173,7 +169,7 @@ impl DependencyManager {
             }
             fs::remove_file(lock_file.clone()).expect("Failed to remove Lingo.lock");
         }
-        return Ok(result);
+        Ok(result)
     }
 
     pub fn from_dependencies(
@@ -232,7 +228,7 @@ impl DependencyManager {
         // moves the selected packages into the include folder
         let include_folder = target_path.join("lfc_include");
         let include_path = &PathBuf::from(".");
-        lock.create_library_folder(&include_path, &library_path, &include_folder)
+        lock.create_library_folder(include_path, &library_path, &include_folder)
             .expect("creating lock folder failed");
 
         // saves the lockfile with the dependency manager

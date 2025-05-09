@@ -4,11 +4,10 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use versions::Versioning;
 
 use indexmap::IndexMap;
-use log::{error, info};
+use log::error;
 use serde::de::Error as DeserializationError;
 use serde::ser::Error as SerializationError;
 use std::cmp::PartialEq;
-use std::collections::HashMap;
 use std::fmt::Display;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -277,7 +276,7 @@ impl DependencyLock {
 
     pub fn create_library_folder(
         &self,
-        include_path: &PathBuf,
+        include_path: &Path,
         source_path: &Path,
         target_path: &PathBuf,
     ) -> anyhow::Result<()> {
@@ -285,7 +284,7 @@ impl DependencyLock {
         for (_, dep) in self.dependencies.iter() {
             let local_source = source_path.join(&dep.checksum);
             let find_source = target_path.clone().join(&dep.name);
-            let inc_path = include_path.clone().join(&dep.name);
+            let inc_path = include_path.join(&dep.name);
             fs::create_dir_all(&find_source)?;
             fs::create_dir_all(&inc_path)?;
             copy_dir_all(&local_source, &find_source)?;

@@ -29,7 +29,7 @@ fn gen_cmake_files(app: &App, options: &BuildCommandOptions) -> BuildResult {
     fs::copy(
         src_folder.join("CMakeLists.txt"),
         dst_folder.join("CMakeLists.txt"),
-    );
+    )?;
 
     // location of the cmake file
     let app_build_folder = dst_folder;
@@ -38,16 +38,16 @@ fn gen_cmake_files(app: &App, options: &BuildCommandOptions) -> BuildResult {
     // log::info!("Cmake files app_build_folder:{:?} cmake_file:{:?}", app_build_folder, cmake_file);
 
     // create potential files that come from the target properties
-    app.properties.write_artifacts(&app_build_folder)?;
+    app.properties.write_artifacts(app_build_folder)?;
 
     // we need to modify the cmake file here to include our generated cmake files
-    let src_gen_dir = app.src_gen_dir();
+    //let src_gen_dir = app.src_gen_dir();
 
     // read file and append cmake include to generated cmake file
     let mut content = fs::read_to_string(&cmake_file)?;
 
     let include_dir = "\ninclude_directories(lfc_include)";
-    content += &*include_dir;
+    content += include_dir;
 
     let include_cmake = format!(
         "\ninclude({}/aggregated_cmake_include.cmake)",

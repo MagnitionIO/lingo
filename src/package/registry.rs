@@ -1,17 +1,11 @@
-use crate::config::get_global_config;
 use crate::config::RegistryConfig;
-use anyhow::{Context, Result};
-use futures_util::StreamExt;
+use anyhow::Result;
 use reqwest::Client;
 use semver::Version;
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
-use std::str::FromStr;
-use url::Url;
-use versions::{Requirement, Versioning};
+use versions::Versioning;
 
 #[derive(Debug)]
 pub struct RegistryArtifact {
@@ -22,6 +16,12 @@ pub struct RegistryArtifact {
 
 pub struct RegistryClient {
     config: RegistryConfig,
+}
+
+impl Default for RegistryClient {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl RegistryClient {
@@ -103,7 +103,7 @@ impl RegistryClient {
         let response = client.get(&artifact.url).send().await?.error_for_status()?;
 
         // Get the content length for progress reporting
-        let total_size = response.content_length().unwrap_or(0);
+        let _total_size = response.content_length().unwrap_or(0);
 
         // Download the content
         let bytes = response.bytes().await?;
