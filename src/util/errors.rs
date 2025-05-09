@@ -18,6 +18,7 @@ pub enum LingoError {
     InvalidMainReactor,
     NoLibraryInLingoToml(String),
     LingoVersionMismatch(String),
+    PackageNotFound(String),
 }
 
 impl Display for LingoError {
@@ -55,6 +56,9 @@ impl Display for LingoError {
                     f,
                     "Version specified in Lingo.toml doesn't match the version in the location {message}"
                 )
+            }
+            LingoError::PackageNotFound(name) => {
+                write!(f, "Package not found: {}", name)
             }
         }
     }

@@ -15,6 +15,7 @@ use liblingo::package::{Config, ConfigFile};
 use liblingo::util::errors::{BuildResult, LingoError};
 use liblingo::{GitCloneAndCheckoutCap, GitCloneError, GitUrl, WhichCapability, WhichError};
 use log::LevelFilter;
+use liblingo::config::init_global_config;
 
 fn do_which(cmd: &str) -> Result<PathBuf, WhichError> {
     which::which(cmd).map_err(|err| match err {
@@ -92,7 +93,10 @@ fn do_read_to_string(p: &Path) -> io::Result<String> {
     std::fs::read_to_string(p)
 }
 
-fn main() {
+fn main() -> anyhow::Result<()> {
+    // Initialize global configuration
+    init_global_config()?;
+    
     print_logger::new().level_filter(LevelFilter::Trace).init().unwrap();
     // parses command line arguments
     let args = CommandLineArgs::parse();
@@ -128,8 +132,14 @@ fn main() {
     );
 
     match result {
-        CommandResult::Batch(res) => res.print_results(),
-        CommandResult::Single(res) => print_res(res),
+        CommandResult::Batch(res) => {
+            res.print_results();
+            Ok(())
+        }
+        CommandResult::Single(res) => {
+            print_res(res);
+            Ok(())
+        }
     }
 }
 

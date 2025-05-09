@@ -2,7 +2,6 @@ use std::io::{self, Write};
 use std::process::{Command, ExitStatus, Stdio};
 
 use crate::util::errors::{BuildResult, LingoError};
-use crossbeam::thread;
 
 struct TeeWriter<'a, W0: Write, W1: Write> {
     w0: &'a mut W0,

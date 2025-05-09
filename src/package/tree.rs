@@ -14,6 +14,8 @@ pub enum ProjectSource {
     TarBall(Url),
     #[serde(rename = "path")]
     Path(PathBuf),
+    #[serde(rename = "registry")]
+    Registry(String),
     //#[serde(rename = "empty")]
     //Empty,
 }

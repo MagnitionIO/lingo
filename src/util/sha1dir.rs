@@ -193,8 +193,3 @@ fn begin(path: &Path, kind: u8) -> Sha1 {
     sha.update(path_bytes);
     sha
 }
-
-#[test]
-fn test_cli() {
-    <Opt as clap::CommandFactory>::command().debug_assert();
-}

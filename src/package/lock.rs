@@ -78,6 +78,7 @@ impl From<ProjectSource> for PackageLockSourceType {
             ProjectSource::Git(_) => Self::GIT,
             ProjectSource::TarBall(_) => Self::TARBALL,
             ProjectSource::Path(_) => Self::PATH,
+            ProjectSource::Registry(_) => Self::REGISTRY,
         }
     }
 }
@@ -134,6 +135,7 @@ impl From<DependencyTreeNode> for PackageLock {
             ProjectSource::Git(git) => git.to_string(),
             ProjectSource::TarBall(tar) => tar.to_string(),
             ProjectSource::Path(path) => format!("{:?}", path),
+            ProjectSource::Registry(name) => name.clone(),
         };
 
         PackageLock {

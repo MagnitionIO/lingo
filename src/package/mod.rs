@@ -1,7 +1,7 @@
 pub mod lock;
 pub mod management;
 pub mod tree;
-
+pub mod registry;
 pub mod target_properties;
 
 use serde::de::{Error, Visitor};
@@ -35,7 +35,7 @@ use crate::util::{
     analyzer, copy_recursively,
     errors::{BuildResult, LingoError},
 };
-use crate::{FsReadCapability, GitCloneAndCheckoutCap, GitUrl, WhichCapability};
+use crate::{config, FsReadCapability, GitCloneAndCheckoutCap, GitUrl, WhichCapability};
 
 /// place where are the build artifacts will be dropped
 pub const OUTPUT_DIRECTORY: &str = "build";
@@ -77,6 +77,9 @@ pub struct ConfigFile {
 
     /// Dependencies for required to build this Lingua-Franca Project
     pub dependencies: HashMap<String, PackageDetails>,
+
+    #[serde(default)]
+    pub registry: config::RegistryConfig,
 }
 
 /// This struct is used after filling in all the defaults
@@ -373,6 +376,7 @@ impl ConfigFile {
             dependencies: HashMap::default(),
             apps: Some(app_specs),
             library: Option::default(),
+            registry: config::RegistryConfig::default(),
         };
         Ok(result)
     }

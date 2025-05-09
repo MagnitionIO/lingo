@@ -22,6 +22,8 @@ use crate::package::{
     ConfigFile, LIBRARY_DIRECTORY,
 };
 use crate::util::errors::LingoError;
+use crate::package::registry::{RegistryArtifact, RegistryClient};
+use tokio::runtime::Runtime;
 
 #[derive(Default)]
 pub struct DependencyManager {
@@ -89,7 +91,30 @@ impl PackageDetails {
                 )?;
                 Ok(())
             }
-            _ => Ok(()),
+            ProjectSource::Registry(package_name) => {
+                // Create a runtime for async operations
+                let rt = Runtime::new()?;
+                
+                // Create registry client using global configuration
+                let client = RegistryClient::new();
+                
+                // Convert Requirement to Versioning for registry lookup
+                let version = Versioning::from_str(&self.version.to_string())?;
+                
+                // Resolve and download the artifact
+                rt.block_on(async {
+                    if let Some(artifact) = client.resolve_artifact(package_name, &version).await? {
+                        client.download_artifact(&artifact, library_path).await?;
+                        Ok(())
+                    } else {
+                        Err(LingoError::PackageNotFound(package_name.clone()).into())
+                    }
+                })
+            }
+            ProjectSource::TarBall(url) => {
+                // TODO: Implement tarball download and extraction
+                Ok(())
+            }
         }
     }
 }
