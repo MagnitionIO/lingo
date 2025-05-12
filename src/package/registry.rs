@@ -1,4 +1,4 @@
-use crate::config::RegistryConfig;
+use crate::config::{get_global_config, RegistryConfig};
 use anyhow::Result;
 use reqwest::Client;
 use semver::Version;
@@ -26,7 +26,7 @@ impl Default for RegistryClient {
 
 impl RegistryClient {
     pub fn new() -> Self {
-        let config = crate::config::get_global_config().registry.clone();
+        let config = get_global_config().registry.clone();
         Self { config }
     }
 
@@ -37,19 +37,15 @@ impl RegistryClient {
         version: &Versioning,
     ) -> Result<Option<RegistryArtifact>> {
         let client = Client::new();
+        let global_config = get_global_config();
 
         // Convert version requirement to a concrete version string
         let version_str = version.to_string();
 
         // Try each registry URL in order
         for base_url in &self.config.urls {
-            // Construct the artifact URL
-            let artifact_url = format!(
-                "{}/api/v1/packages/{}/versions/{}/download",
-                base_url.trim_end_matches('/'),
-                name,
-                version_str
-            );
+            // Construct the artifact URL using the new structure
+            let artifact_url = global_config.get_component_url(&version_str, name);
 
             // Try to check if the artifact exists
             match client.head(&artifact_url).send().await {

@@ -7,6 +7,26 @@ pub struct RegistryConfig {
     pub auth_token: Option<String>,
 }
 
+impl RegistryConfig {
+    pub fn get_component_url(
+        &self,
+        base_url: &str,
+        architecture: &str,
+        sdk_version: &str,
+        component_version: &str,
+        component: &str,
+    ) -> String {
+        format!(
+            "{}/{}/{}/{}/{}",
+            base_url.trim_end_matches('/'),
+            architecture,
+            sdk_version,
+            component_version,
+            component
+        )
+    }
+}
+
 impl Default for RegistryConfig {
     fn default() -> Self {
         Self {

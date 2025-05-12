@@ -3,6 +3,7 @@ use anyhow::Result;
 use dirs::home_dir;
 use semver::Version;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 use std::fs;
 use std::path::PathBuf;
 
@@ -15,6 +16,16 @@ pub enum Architecture {
     AArch64,
     #[serde(rename = "arm")]
     Arm,
+}
+
+impl fmt::Display for Architecture {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Architecture::X86_64 => write!(f, "x86_64"),
+            Architecture::AArch64 => write!(f, "aarch64"),
+            Architecture::Arm => write!(f, "arm"),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -51,6 +62,18 @@ pub struct GlobalConfig {
     pub registry: RegistryConfig,
     pub architecture: Architecture,
     pub sdk_version: VersionWrapper,
+}
+
+impl GlobalConfig {
+    pub fn get_component_url(&self, component_version: &str, component: &str) -> String {
+        self.registry.get_component_url(
+            &self.registry.urls[0],
+            &self.architecture.to_string(),
+            &self.sdk_version.0.major.to_string(),
+            component_version,
+            component,
+        )
+    }
 }
 
 pub struct GlobalConfigManager {
