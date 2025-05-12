@@ -35,7 +35,18 @@ use crate::util::{
     analyzer, copy_recursively,
     errors::{BuildResult, LingoError},
 };
-use crate::{config, FsReadCapability, GitCloneAndCheckoutCap, GitUrl, WhichCapability};
+use crate::{FsReadCapability, GitCloneAndCheckoutCap, GitUrl, WhichCapability};
+
+/// Default values used throughout the package module
+pub mod defaults {
+    use crate::args::{Platform, TargetLanguage};
+
+    /// Default target language for all projects
+    pub const DEFAULT_TARGET: TargetLanguage = TargetLanguage::Cpp;
+
+    /// Default platform for all projects
+    pub const DEFAULT_PLATFORM: Platform = Platform::Native;
+}
 
 /// place where are the build artifacts will be dropped
 pub const OUTPUT_DIRECTORY: &str = "build";
@@ -77,9 +88,6 @@ pub struct ConfigFile {
 
     /// Dependencies for required to build this Lingua-Franca Project
     pub dependencies: HashMap<String, PackageDetails>,
-
-    #[serde(default)]
-    pub registry: config::RegistryConfig,
 }
 
 /// This struct is used after filling in all the defaults
@@ -106,12 +114,6 @@ pub struct LibraryFile {
 
     /// if not specified will default to ./lib
     pub location: Option<PathBuf>,
-
-    /// target language of the library
-    pub target: TargetLanguage,
-
-    /// platform of this project
-    pub platform: Option<Platform>,
 
     /// target properties of that lingua-franca app
     pub properties: LibraryTargetPropertiesFile,
@@ -146,12 +148,6 @@ pub struct AppFile {
 
     /// if not specified will default to main.lf
     pub main: Option<PathBuf>,
-
-    /// target of the app
-    pub target: TargetLanguage,
-
-    /// platform of this project
-    pub platform: Option<Platform>,
 
     /// target properties of that lingua-franca app
     pub properties: AppTargetPropertiesFile,
@@ -213,8 +209,8 @@ impl AppFile {
             output_root: path.join(OUTPUT_DIRECTORY),
             main_reactor: abs,
             main_reactor_name: main_reactor_name.to_string(),
-            target: self.target,
-            platform: self.platform.unwrap_or(Platform::Native),
+            target: defaults::DEFAULT_TARGET,
+            platform: defaults::DEFAULT_PLATFORM,
             properties: self.properties.from(path),
         }
     }
@@ -241,8 +237,8 @@ impl LibraryFile {
                 abs.push(self.location.unwrap_or(DEFAULT_LIBRARY_FOLDER.into()));
                 abs
             },
-            target: self.target,
-            platform: self.platform.unwrap_or(Platform::Native),
+            target: defaults::DEFAULT_TARGET,
+            platform: defaults::DEFAULT_PLATFORM,
             properties: self.properties.from(&name),
             output_root: path.join(OUTPUT_DIRECTORY),
         }
@@ -333,7 +329,7 @@ pub struct PackageDescription {
 }
 
 impl ConfigFile {
-    pub fn new_for_init_task(init_args: &InitArgs) -> io::Result<ConfigFile> {
+    pub fn new_for_init_task(_init_args: &InitArgs) -> io::Result<ConfigFile> {
         let main_reactors = vec![analyzer::MainReactorSpec {
             name: std::env::current_dir()
                 .expect("error while reading current directory")
@@ -343,7 +339,7 @@ impl ConfigFile {
                 .to_string_lossy()
                 .to_string(),
             path: "main.cc".into(),
-            target: init_args.get_target_language(),
+            target: defaults::DEFAULT_TARGET,
         }];
         // log::info!("main_reactors: {:?}", main_reactors);
         let app_specs: Vec<AppFile> = main_reactors
@@ -351,8 +347,6 @@ impl ConfigFile {
             .map(|spec: analyzer::MainReactorSpec| AppFile {
                 name: Some(spec.name),
                 main: Some(spec.path),
-                target: spec.target,
-                platform: Some(init_args.platform),
                 properties: Default::default(),
             })
             .collect::<Vec<_>>();
@@ -375,7 +369,6 @@ impl ConfigFile {
             dependencies: HashMap::default(),
             apps: Some(app_specs),
             library: Option::default(),
-            registry: config::RegistryConfig::default(),
         };
         Ok(result)
     }
