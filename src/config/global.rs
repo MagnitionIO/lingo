@@ -12,18 +12,15 @@ pub enum Architecture {
     #[default]
     #[serde(rename = "x86_64")]
     X86_64,
-    #[serde(rename = "aarch64")]
-    AArch64,
-    #[serde(rename = "arm")]
-    Arm,
+    #[serde(rename = "arm64")]
+    Arm64,
 }
 
 impl fmt::Display for Architecture {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Architecture::X86_64 => write!(f, "x86_64"),
-            Architecture::AArch64 => write!(f, "aarch64"),
-            Architecture::Arm => write!(f, "arm"),
+            Architecture::Arm64 => write!(f, "arm64"),
         }
     }
 }

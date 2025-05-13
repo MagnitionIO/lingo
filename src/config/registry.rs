@@ -17,7 +17,7 @@ impl RegistryConfig {
         component: &str,
     ) -> String {
         format!(
-            "{}/{}/{}/{}/{}",
+            "{}/{}/sdk{}/{}/{}",
             base_url.trim_end_matches('/'),
             architecture,
             sdk_version,
@@ -30,7 +30,7 @@ impl RegistryConfig {
 impl Default for RegistryConfig {
     fn default() -> Self {
         Self {
-            urls: vec!["https://registry.lingo.io".to_string()],
+            urls: vec!["http://localhost:8080/pulp/content/file/foo".to_string()],
             auth_token: None,
         }
     }
