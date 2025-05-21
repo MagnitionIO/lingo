@@ -74,6 +74,7 @@ impl PackageDetails {
     /// this function fetches the specified location and places it at the given location
     pub fn fetch(
         &mut self,
+        package_name: &str,
         library_path: &PathBuf,
         clone: &GitCloneAndCheckoutCap,
     ) -> anyhow::Result<()> {
@@ -91,7 +92,7 @@ impl PackageDetails {
                 )?;
                 Ok(())
             }
-            ProjectSource::Registry(package_name) => {
+            ProjectSource::Registry(_) => {
                 // Create a runtime for async operations
                 let rt = Runtime::new()?;
 
@@ -99,15 +100,15 @@ impl PackageDetails {
                 let client = RegistryClient::new();
 
                 // Convert Requirement to Versioning for registry lookup
-                let version = Versioning::from_str(&self.version.to_string())?;
+                let version = self.version.version.get_or_insert_default(); // TODO fbermejo!! //Versioning::from_str(&self.version.to_string())?;
 
                 // Resolve and download the artifact
                 rt.block_on(async {
-                    if let Some(artifact) = client.resolve_artifact(package_name, &version).await? {
+                    if let Some(artifact) = client.resolve_artifact(package_name, version).await? {
                         client.download_artifact(&artifact, library_path).await?;
                         Ok(())
                     } else {
-                        Err(LingoError::PackageNotFound(package_name.clone()).into())
+                        Err(LingoError::PackageNotFound(package_name.to_string()).into())
                     }
                 })
             }
@@ -297,7 +298,7 @@ impl DependencyManager {
         fs::create_dir_all(&temporary_path)?;
 
         // cloning the specified package
-        package.fetch(&temporary_path, git_clone_and_checkout_cap)?;
+        package.fetch(name, &temporary_path, git_clone_and_checkout_cap)?;
 
         let hash = sha1dir::checksum_current_dir(&temporary_path, false);
         let include_path = library_path.join(hash.to_string());

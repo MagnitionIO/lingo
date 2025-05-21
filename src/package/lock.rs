@@ -223,7 +223,7 @@ impl DependencyLock {
                 let mut details = PackageDetails::try_from(&lock.source)?;
 
                 details
-                    .fetch(&temp, git_clone_and_checkout_cap)
+                    .fetch(&lock.name, &temp, git_clone_and_checkout_cap)
                     .expect("cannot pull package");
             }
 

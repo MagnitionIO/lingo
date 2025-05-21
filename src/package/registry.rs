@@ -46,6 +46,7 @@ impl RegistryClient {
         for base_url in &self.config.urls {
             // Construct the artifact URL using the new structure
             let artifact_url = global_config.get_component_url(&version_str, name);
+            println!("artifact_url: {}", artifact_url);
 
             // Try to check if the artifact exists
             match client.head(&artifact_url).send().await {
@@ -92,6 +93,7 @@ impl RegistryClient {
         artifact: &RegistryArtifact,
         target_path: &PathBuf,
     ) -> Result<()> {
+        println!("download_artifact: {}", artifact.url);
         // Create an async client for the download
         let client = Client::new();
 
@@ -105,7 +107,7 @@ impl RegistryClient {
         let bytes = response.bytes().await?;
 
         // Write the downloaded content to the target file
-        let mut file = fs::File::create(target_path)?;
+        let mut file = fs::File::create(target_path.join(artifact.name.clone()))?;
         file.write_all(&bytes)?;
 
         log::info!(
